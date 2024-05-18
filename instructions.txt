@@ -3,11 +3,6 @@
 npx create-react-app .
 
 
-*To test the app*
-
-npm start
-
-
 *To deploy the site to gh-pages*
 
 npm install gh-pages --save-dev
@@ -21,6 +16,11 @@ Add to package.json:
     }
 create a branch named gh-pages
 select build and deploy from this new branch
+
+
+*To test the app*
+
+npm start
 
 
 *To deploy updates*
