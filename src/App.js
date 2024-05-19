@@ -169,24 +169,25 @@ function sleepSchedule(bedTime, targetTime, sleepDuration, maxChange, mode) {
   let currentTime = new Date(1970, 0, 1, current.hours, current.minutes);
   const targetTimeObj = new Date(1970, 0, 1, target.hours, target.minutes);
   const results = [];
-  let chosenMode = mode;
   let day = 1;
+  let chosenMode = mode;
 
   while (currentTime.getHours() !== targetTimeObj.getHours() || currentTime.getMinutes() !== targetTimeObj.getMinutes()) {
     const forwardDifference = (targetTimeObj - currentTime + 24 * 3600 * 1000) % (24 * 3600 * 1000);
     const backwardDifference = (currentTime - targetTimeObj + 24 * 3600 * 1000) % (24 * 3600 * 1000);
 
+    let effectiveMode = mode;
     if (mode === 'automatic') {
       if (forwardDifference <= backwardDifference) {
-        chosenMode = 'Sleep later';
+        effectiveMode = 'Sleep Later';
       } else {
-        chosenMode = 'Sleep earlier';
+        effectiveMode = 'Sleep Earlier';
       }
     }
 
-    if (chosenMode === 'Sleep later' || (chosenMode === 'automatic' && forwardDifference <= backwardDifference)) {
+    if (effectiveMode === 'Sleep Later') {
       currentTime = new Date(currentTime.getTime() + Math.min(forwardDifference, maxChangeMillis));
-    } else {
+    } else {  // 'Sleep Earlier'
       currentTime = new Date(currentTime.getTime() - Math.min(backwardDifference, maxChangeMillis));
     }
 
@@ -196,6 +197,11 @@ function sleepSchedule(bedTime, targetTime, sleepDuration, maxChange, mode) {
       sleep: currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
       wake: wakeTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
     });
+
+    // Update the chosen mode for this day
+    if (mode === 'automatic') {
+      chosenMode = effectiveMode;
+    }
 
     day += 1;
   }
