@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/sleep_prescription/static/css/main.18a3b5a1.css",
-    "main.js": "/sleep_prescription/static/js/main.d2119224.js",
+    "main.css": "/sleep_prescription/static/css/main.3cecdfce.css",
+    "main.js": "/sleep_prescription/static/js/main.11363817.js",
     "static/js/453.0ac2251f.chunk.js": "/sleep_prescription/static/js/453.0ac2251f.chunk.js",
     "index.html": "/sleep_prescription/index.html",
-    "main.18a3b5a1.css.map": "/sleep_prescription/static/css/main.18a3b5a1.css.map",
-    "main.d2119224.js.map": "/sleep_prescription/static/js/main.d2119224.js.map",
+    "main.3cecdfce.css.map": "/sleep_prescription/static/css/main.3cecdfce.css.map",
+    "main.11363817.js.map": "/sleep_prescription/static/js/main.11363817.js.map",
     "453.0ac2251f.chunk.js.map": "/sleep_prescription/static/js/453.0ac2251f.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.18a3b5a1.css",
-    "static/js/main.d2119224.js"
+    "static/css/main.3cecdfce.css",
+    "static/js/main.11363817.js"
   ]
 }
