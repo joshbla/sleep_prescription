@@ -13,6 +13,24 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const formatTime = (timeString) => {
+    const { hours, minutes } = parseTimeString(timeString);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    return `${formattedHours}:${formattedMinutes} ${period}`;
+  };
+
+  const handleBlur = (event, setTime) => {
+    try {
+      const formattedTime = formatTime(event.target.value);
+      setTime(formattedTime);
+      setErrorMessage('');
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
+  };
+
   const handleSubmit = () => {
     try {
       const { results, chosenMode } = sleepSchedule(bedTime, targetTime, sleepDuration, maxChange, mode);
@@ -40,7 +58,7 @@ function App() {
       trimmedCanvas.getContext('2d').drawImage(
         canvas,
         trimMargin, trimMargin,   // Start cropping inside the original canvas
-        canvas.width - 2 * trimMargin, canvas.height - 2* trimMargin, // Crop size from the original canvas
+        canvas.width - 2 * trimMargin, canvas.height - 2 * trimMargin, // Crop size from the original canvas
         0, 0, // Place cropped content at (0,0) of new canvas
         canvas.width - 2 * trimMargin, canvas.height - 2 * trimMargin // Size of cropped content on new canvas
       );
@@ -64,6 +82,7 @@ function App() {
             placeholder="HH:MM AM/PM"
             value={bedTime}
             onChange={(e) => setBedTime(e.target.value)}
+            onBlur={(e) => handleBlur(e, setBedTime)}
           />
         </div>
         <div className="input-group">
@@ -73,6 +92,7 @@ function App() {
             placeholder="HH:MM AM/PM"
             value={targetTime}
             onChange={(e) => setTargetTime(e.target.value)}
+            onBlur={(e) => handleBlur(e, setTargetTime)}
           />
         </div>
         <div className="input-group">
@@ -131,11 +151,11 @@ function App() {
 }
 
 function parseTimeString(timeString) {
-  const regex = /^(\d{1,2})(?::(\d{2}))?\s*([AaPp][Mm])?$/;
+  const regex = /^(\d{1,2})(?::?(\d{2}))?\s*([AaPp]?[Mm]?)?$/;
   const match = timeString.match(regex);
 
   if (!match) {
-    throw new Error('Time must be in the format HH:MM AM/PM, HHMM, or military time.');
+    throw new Error('Time must be in the format HH:MM AM/PM, HHMM, HH:MM, or military time.');
   }
 
   let [_, hours, minutes, period] = match;
@@ -150,9 +170,11 @@ function parseTimeString(timeString) {
 
   if (period) {
     period = period.toUpperCase();
-    if (period === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (period === 'AM' && hours === 12) {
+    if (period === 'P' || period === 'PM') {
+      if (hours < 12) {
+        hours += 12;
+      }
+    } else if ((period === 'A' || period === 'AM') && hours === 12) {
       hours = 0;
     }
   }
