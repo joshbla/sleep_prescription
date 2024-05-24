@@ -3,10 +3,10 @@ import html2canvas from 'html2canvas';
 import './App.css';
 
 function App() {
-  const [bedTime, setBedTime] = useState('04:00 AM');
+  const [bedTime, setBedTime] = useState('02:00 AM');
   const [targetTime, setTargetTime] = useState('11:00 PM');
   const [sleepDuration, setSleepDuration] = useState(9);
-  const [maxChange, setMaxChange] = useState(1.5);
+  const [nightlyShift, setNightlyShift] = useState(1);
   const [mode, setMode] = useState('automatic');
   const [results, setResults] = useState([]);
   const [chosenMode, setChosenMode] = useState('');
@@ -33,7 +33,7 @@ function App() {
 
   const handleSubmit = () => {
     try {
-      const { results, chosenMode } = sleepSchedule(bedTime, targetTime, sleepDuration, maxChange, mode);
+      const { results, chosenMode } = sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode);
       setResults(results);
       setChosenMode(chosenMode);
       setShowPopup(true);
@@ -45,7 +45,7 @@ function App() {
 
   const handleSaveImage = () => {
     const elementToInclude = document.querySelector('#screenshot-area');
-
+    
     // Increase resolution by scaling
     const scale = 5;
 
@@ -104,11 +104,11 @@ function App() {
           />
         </div>
         <div className="input-group">
-          <label>Max Change (hours):</label>
+          <label>Nightly Shift (half hours):</label>
           <input
             type="number"
-            value={maxChange}
-            onChange={(e) => setMaxChange(parseFloat(e.target.value))}
+            value={nightlyShift}
+            onChange={(e) => setNightlyShift(parseInt(e.target.value))}
           />
         </div>
         <div className="input-group">
@@ -153,7 +153,7 @@ function App() {
 function parseTimeString(timeString) {
   const regex = /^(\d{1,2})(?::?(\d{2}))?\s*([AaPp]?[Mm]?)?$/;
   const match = timeString.match(regex);
-
+  
   if (!match) {
     throw new Error('Time must be in the format HH:MM AM/PM, HHMM, HH:MM, or military time.');
   }
@@ -182,11 +182,11 @@ function parseTimeString(timeString) {
   return { hours, minutes };
 }
 
-function sleepSchedule(bedTime, targetTime, sleepDuration, maxChange, mode) {
+function sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode) {
   const current = parseTimeString(bedTime);
   const target = parseTimeString(targetTime);
-  const maxChangeMillis = maxChange * 3600 * 1000; // convert hours to milliseconds
-  const sleepDurationMillis = sleepDuration * 3600 * 1000;
+  const maxChangeMillis = nightlyShift * 1800 * 1000; // convert half hours to milliseconds
+  const sleepDurationMillis = sleepDuration * 3600 * 1000; // convert hours to milliseconds
 
   let currentTime = new Date(1970, 0, 1, current.hours, current.minutes);
   const targetTimeObj = new Date(1970, 0, 1, target.hours, target.minutes);
@@ -197,7 +197,7 @@ function sleepSchedule(bedTime, targetTime, sleepDuration, maxChange, mode) {
   while (currentTime.getHours() !== targetTimeObj.getHours() || currentTime.getMinutes() !== targetTimeObj.getMinutes()) {
     const forwardDifference = (targetTimeObj - currentTime + 24 * 3600 * 1000) % (24 * 3600 * 1000);
     const backwardDifference = (currentTime - targetTimeObj + 24 * 3600 * 1000) % (24 * 3600 * 1000);
-
+    
     let effectiveMode = mode;
     if (mode === 'automatic') {
       if (forwardDifference <= backwardDifference) {
