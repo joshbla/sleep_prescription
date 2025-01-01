@@ -185,8 +185,8 @@ function parseTimeString(timeString) {
 function sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode) {
   const current = parseTimeString(bedTime);
   const target = parseTimeString(targetTime);
-  const maxChangeMillis = nightlyShift * 1800 * 1000; // convert half hours to milliseconds
-  const sleepDurationMillis = sleepDuration * 3600 * 1000; // convert hours to milliseconds
+  const maxChangeMillis = nightlyShift * 1800 * 1000;
+  const sleepDurationMillis = sleepDuration * 3600 * 1000;
 
   let currentTime = new Date(1970, 0, 1, current.hours, current.minutes);
   const targetTimeObj = new Date(1970, 0, 1, target.hours, target.minutes);
@@ -195,22 +195,25 @@ function sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode) {
   let chosenMode = mode;
 
   while (currentTime.getHours() !== targetTimeObj.getHours() || currentTime.getMinutes() !== targetTimeObj.getMinutes()) {
-    const forwardDifference = (targetTimeObj - currentTime + 24 * 3600 * 1000) % (24 * 3600 * 1000);
-    const backwardDifference = (currentTime - targetTimeObj + 24 * 3600 * 1000) % (24 * 3600 * 1000);
+    let timeDiff = targetTimeObj - currentTime;
     
-    let effectiveMode = mode;
-    if (mode === 'automatic') {
-      if (forwardDifference <= backwardDifference) {
-        effectiveMode = 'Sleep Later';
-      } else {
-        effectiveMode = 'Sleep Earlier';
-      }
+    // Adjust for crossing midnight
+    if (timeDiff > 12 * 3600 * 1000) {
+      timeDiff -= 24 * 3600 * 1000;
+    } else if (timeDiff < -12 * 3600 * 1000) {
+      timeDiff += 24 * 3600 * 1000;
     }
 
+    let effectiveMode = mode;
+    if (mode === 'automatic') {
+      effectiveMode = timeDiff > 0 ? 'Sleep Later' : 'Sleep Earlier';
+    }
+
+    const adjustment = Math.min(Math.abs(timeDiff), maxChangeMillis);
     if (effectiveMode === 'Sleep Later') {
-      currentTime = new Date(currentTime.getTime() + Math.min(forwardDifference, maxChangeMillis));
-    } else {  // 'Sleep Earlier'
-      currentTime = new Date(currentTime.getTime() - Math.min(backwardDifference, maxChangeMillis));
+      currentTime = new Date(currentTime.getTime() + adjustment);
+    } else {
+      currentTime = new Date(currentTime.getTime() - adjustment);
     }
 
     const wakeTime = new Date(currentTime.getTime() + sleepDurationMillis);
@@ -220,7 +223,6 @@ function sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode) {
       wake: wakeTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
     });
 
-    // Update the chosen mode for this day
     if (mode === 'automatic') {
       chosenMode = effectiveMode;
     }
