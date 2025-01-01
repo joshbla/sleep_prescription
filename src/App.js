@@ -206,17 +206,29 @@ function sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode) {
   while (currentTime.getHours() !== targetTimeObj.getHours() || 
          currentTime.getMinutes() !== targetTimeObj.getMinutes()) {
     
-    // Apply adjustment based on mode
+    // Calculate next time
+    let nextTime;
     if (chosenMode === 'sleep later') {
-      currentTime = new Date(currentTime.getTime() + maxChangeMillis);
-      if (currentTime.getTime() >= new Date(1970, 0, 2).getTime()) {
-        currentTime = new Date(currentTime.getTime() - dayMillis);
+      nextTime = new Date(currentTime.getTime() + maxChangeMillis);
+      if (nextTime.getTime() >= new Date(1970, 0, 2).getTime()) {
+        nextTime = new Date(nextTime.getTime() - dayMillis);
       }
     } else {
-      currentTime = new Date(currentTime.getTime() - maxChangeMillis);
-      if (currentTime.getTime() < new Date(1970, 0, 1).getTime()) {
-        currentTime = new Date(currentTime.getTime() + dayMillis);
+      nextTime = new Date(currentTime.getTime() - maxChangeMillis);
+      if (nextTime.getTime() < new Date(1970, 0, 1).getTime()) {
+        nextTime = new Date(nextTime.getTime() + dayMillis);
       }
+    }
+
+    // Check if we would overshoot the target
+    let currentDiff = Math.abs(targetTimeObj - currentTime);
+    let nextDiff = Math.abs(targetTimeObj - nextTime);
+    
+    if (nextDiff > currentDiff) {
+      // If we're going to overshoot, just set to target time
+      currentTime = new Date(targetTimeObj.getTime());
+    } else {
+      currentTime = nextTime;
     }
 
     const wakeTime = new Date(currentTime.getTime() + sleepDurationMillis);
@@ -232,6 +244,12 @@ function sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode) {
     });
 
     day += 1;
+
+    // If we've reached the target, break
+    if (currentTime.getHours() === targetTimeObj.getHours() && 
+        currentTime.getMinutes() === targetTimeObj.getMinutes()) {
+      break;
+    }
   }
 
   return { results, chosenMode };
