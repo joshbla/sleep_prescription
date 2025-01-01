@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import html2canvas from 'html2canvas';
+import { FaMoon, FaClock, FaSave, FaTimes } from 'react-icons/fa';
 import './App.css';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
   const [chosenMode, setChosenMode] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const formatTime = (timeString) => {
     const { hours, minutes } = parseTimeString(timeString);
@@ -31,8 +33,9 @@ function App() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
+      setIsLoading(true);
       const { results, chosenMode } = sleepSchedule(bedTime, targetTime, sleepDuration, nightlyShift, mode);
       setResults(results);
       setChosenMode(chosenMode);
@@ -40,30 +43,28 @@ function App() {
       setErrorMessage('');
     } catch (error) {
       setErrorMessage(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSaveImage = () => {
     const elementToInclude = document.querySelector('#screenshot-area');
-    
-    // Increase resolution by scaling
     const scale = 5;
 
     html2canvas(elementToInclude, { scale }).then(canvas => {
-      // Trim edges
-      const trimMargin = 20; // pixels
+      const trimMargin = 20;
       const trimmedCanvas = document.createElement('canvas');
       trimmedCanvas.width = canvas.width - 2 * trimMargin;
       trimmedCanvas.height = canvas.height - 2 * trimMargin;
       trimmedCanvas.getContext('2d').drawImage(
         canvas,
-        trimMargin, trimMargin,   // Start cropping inside the original canvas
-        canvas.width - 2 * trimMargin, canvas.height - 2 * trimMargin, // Crop size from the original canvas
-        0, 0, // Place cropped content at (0,0) of new canvas
-        canvas.width - 2 * trimMargin, canvas.height - 2 * trimMargin // Size of cropped content on new canvas
+        trimMargin, trimMargin,
+        canvas.width - 2 * trimMargin, canvas.height - 2 * trimMargin,
+        0, 0,
+        canvas.width - 2 * trimMargin, canvas.height - 2 * trimMargin
       );
 
-      // Create link to download the image
       const link = document.createElement('a');
       link.download = 'sleep-prescription.png';
       link.href = trimmedCanvas.toDataURL('image/png');
@@ -74,74 +75,125 @@ function App() {
   return (
     <div className="App">
       <div className="container">
-        <h1>Sleep Schedule Adjuster</h1>
-        <div className="input-group">
-          <label>Previous Bed Time:</label>
-          <input
-            type="text"
-            placeholder="HH:MM AM/PM"
-            value={bedTime}
-            onChange={(e) => setBedTime(e.target.value)}
-            onBlur={(e) => handleBlur(e, setBedTime)}
-          />
-        </div>
-        <div className="input-group">
-          <label>Target Bed Time:</label>
-          <input
-            type="text"
-            placeholder="HH:MM AM/PM"
-            value={targetTime}
-            onChange={(e) => setTargetTime(e.target.value)}
-            onBlur={(e) => handleBlur(e, setTargetTime)}
-          />
-        </div>
-        <div className="input-group">
-          <label>Sleep Duration (hours):</label>
-          <input
-            type="number"
-            value={sleepDuration}
-            onChange={(e) => setSleepDuration(parseFloat(e.target.value))}
-          />
-        </div>
-        <div className="input-group">
-          <label>Nightly Shift (half hours):</label>
-          <input
-            type="number"
-            value={nightlyShift}
-            onChange={(e) => setNightlyShift(parseInt(e.target.value))}
-          />
-        </div>
-        <div className="input-group">
-          <label>Mode:</label>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
+        <header className="app-header">
+          <FaMoon className="app-logo" />
+          <h1>Sleep Schedule Adjuster</h1>
+          <p className="subtitle">Optimize your sleep transition schedule</p>
+        </header>
+
+        <div className="form-container">
+          <div className="input-group">
+            <label>
+              <FaClock className="input-icon" />
+              Previous Bed Time:
+            </label>
+            <input
+              type="text"
+              placeholder="HH:MM AM/PM"
+              value={bedTime}
+              onChange={(e) => setBedTime(e.target.value)}
+              onBlur={(e) => handleBlur(e, setBedTime)}
+            />
+          </div>
+
+          <div className="input-group">
+            <label>
+              <FaClock className="input-icon" />
+              Target Bed Time:
+            </label>
+            <input
+              type="text"
+              placeholder="HH:MM AM/PM"
+              value={targetTime}
+              onChange={(e) => setTargetTime(e.target.value)}
+              onBlur={(e) => handleBlur(e, setTargetTime)}
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Sleep Duration (hours):</label>
+            <input
+              type="number"
+              value={sleepDuration}
+              onChange={(e) => setSleepDuration(parseFloat(e.target.value))}
+              min="1"
+              max="24"
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Nightly Shift (half hours):</label>
+            <input
+              type="number"
+              value={nightlyShift}
+              onChange={(e) => setNightlyShift(parseInt(e.target.value))}
+              min="1"
+              max="48"
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Mode:</label>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+            >
+              <option value="automatic">Automatic</option>
+              <option value="sleep later">Sleep Later</option>
+              <option value="sleep earlier">Sleep Earlier</option>
+            </select>
+          </div>
+
+          <button 
+            className="submit-button" 
+            onClick={handleSubmit}
+            disabled={isLoading}
           >
-            <option value="automatic">Automatic</option>
-            <option value="sleep later">Sleep Later</option>
-            <option value="sleep earlier">Sleep Earlier</option>
-          </select>
+            {isLoading ? 'Calculating...' : 'Calculate Schedule'}
+          </button>
+
+          {errorMessage && (
+            <div className="error-message">
+              <p>{errorMessage}</p>
+            </div>
+          )}
         </div>
-        <button className="submit-button" onClick={handleSubmit}>Calculate</button>
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
+
+        <div className="info-section">
+          <h3>How to use:</h3>
+          <ul>
+            <li>Enter your current bedtime in HH:MM AM/PM format</li>
+            <li>Enter your desired bedtime</li>
+            <li>Specify how long you want to sleep</li>
+            <li>Choose how much you want to adjust each night (in half hours)</li>
+            <li>Select whether you want to automatically determine the best adjustment or manually choose</li>
+          </ul>
+        </div>
+
         {showPopup && (
           <div className="popup">
-            <div id="popup-inner" className="popup-inner">
-              <div id="screenshot-area" className="screenshot-area" style={{ backgroundColor: '#1e1e1e', color: '#e0e0e0', padding: '20px', borderRadius: '8px' }}>
+            <div className="popup-inner">
+              <div id="screenshot-area" className="screenshot-area">
                 <h2>Sleep Prescription</h2>
-                <p>Mode Chosen: {chosenMode}</p>
+                <p className="mode-chosen">Mode Chosen: {chosenMode}</p>
                 <div className="results">
                   {results.map((result, index) => (
                     <div key={index} className="result-entry">
-                      <p>Day {result.day}</p>
-                      <p>Sleep: {result.sleep}</p>
-                      <p>Wake: {result.wake}</p>
+                      <p className="day">Day {result.day}</p>
+                      <p className="sleep">Sleep: {result.sleep}</p>
+                      <p className="wake">Wake: {result.wake}</p>
                     </div>
                   ))}
                 </div>
               </div>
-              <button className="popup-button" onClick={handleSaveImage}>Save as Image</button>
-              <button className="popup-button" onClick={() => setShowPopup(false)}>Close</button>
+              <div className="popup-buttons">
+                <button className="popup-button save" onClick={handleSaveImage}>
+                  <FaSave /> Save as Image
+                </button>
+                <button className="popup-button close" onClick={() => setShowPopup(false)}>
+                  <FaTimes /> Close
+                </button>
+              </div>
             </div>
           </div>
         )}
