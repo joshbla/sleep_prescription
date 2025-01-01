@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/sleep_prescription/static/css/main.8699fcdb.css",
-    "main.js": "/sleep_prescription/static/js/main.531c203b.js",
+    "main.js": "/sleep_prescription/static/js/main.73350743.js",
     "static/js/453.0ac2251f.chunk.js": "/sleep_prescription/static/js/453.0ac2251f.chunk.js",
     "index.html": "/sleep_prescription/index.html",
     "main.8699fcdb.css.map": "/sleep_prescription/static/css/main.8699fcdb.css.map",
-    "main.531c203b.js.map": "/sleep_prescription/static/js/main.531c203b.js.map",
+    "main.73350743.js.map": "/sleep_prescription/static/js/main.73350743.js.map",
     "453.0ac2251f.chunk.js.map": "/sleep_prescription/static/js/453.0ac2251f.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.8699fcdb.css",
-    "static/js/main.531c203b.js"
+    "static/js/main.73350743.js"
   ]
 }
